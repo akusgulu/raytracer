@@ -2,6 +2,7 @@
 #define VEC3_H
 
 #include <iostream>
+#include <cmath>
 class vec3
 {
 public:
@@ -16,6 +17,17 @@ public:
         y = v.y;
         z = v.z;
         return *this;
+    }
+
+    vec3& operator+=(const vec3 &v){
+        x += v.x;
+        y += v.y;
+        z += v.z;
+        return *this;
+    }
+
+    inline double len() const{
+        return sqrt(pow(x,2)+pow(y,2)+pow(z,2));
     }
 
 public:
@@ -51,7 +63,7 @@ vec3 operator*(const vec3 &v, const double d)
     return d * v;
 }
 
-vec3 operator/(const double d, const vec3 &v)
+vec3 operator/(const vec3 &v,const double d)
 {
     return 1 / d * v;
 }
