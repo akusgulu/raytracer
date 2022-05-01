@@ -25,7 +25,7 @@ void write_color(std::ostream &out, color pixel_color)
         << clamp(pixel_color.z) << '\n';
 }
 
-bool intersect(const ray &r, const point3 &v0, const point3 &v1, const point3 &v2, double &t,const double t_min, const double t_max)
+bool intersect(const ray &r, const point3 &v0, const point3 &v1, const point3 &v2, double &t, const double t_min, const double t_max)
 {
     const double EPSILON = 0.000001;
 
@@ -52,7 +52,7 @@ bool intersect(const ray &r, const point3 &v0, const point3 &v1, const point3 &v
 
     t = dot(e2, qvec) * inv_det;
 
-    return t>t_min && t<t_max;
+    return t > t_min && t < t_max;
 }
 
 ray eye_ray_to_pixel(const camera_st &camera, const int i, const int j)
@@ -66,7 +66,7 @@ ray eye_ray_to_pixel(const camera_st &camera, const int i, const int j)
     return ray(camera.position, s - camera.position);
 }
 
-color ray_color(const scene_st &scene, const ray &r)
+color ray_color(const scene_st &scene, const ray &r, const double depth)
 {
     double t_min = numeric_limits<double>::infinity();
     double t;
@@ -78,7 +78,7 @@ color ray_color(const scene_st &scene, const ray &r)
     {
         for (auto f : o.faces)
         {
-            if (intersect(r, scene.verts[f.x - 1], scene.verts[f.y - 1], scene.verts[f.z - 1], t,0,INF) &&
+            if (intersect(r, scene.verts[f.x - 1], scene.verts[f.y - 1], scene.verts[f.z - 1], t, 0, INF) &&
                 t_min > t)
             {
                 t_min = t;
@@ -91,7 +91,6 @@ color ray_color(const scene_st &scene, const ray &r)
     vec3 n;
     if (t_min < numeric_limits<double>::infinity())
         n = unit_vec(cross(scene.verts[face.y - 1] - scene.verts[face.x - 1], scene.verts[face.z - 1] - scene.verts[face.x - 1]));
-    
 
     color c = scene.background;
 
@@ -112,11 +111,10 @@ color ray_color(const scene_st &scene, const ray &r)
                 for (auto f : o.faces)
                 {
                     double t_x;
-                    if (intersect(s, scene.verts[f.x - 1], scene.verts[f.y - 1], scene.verts[f.z - 1], t_x,0,INF) && t_x > 0)
+                    if (intersect(s, scene.verts[f.x - 1], scene.verts[f.y - 1], scene.verts[f.z - 1], t_x, 0, INF))
                     {
-                        if (s.at(t_x).len() < dist) // probably wrong
+                        if (s.at(t_x).len() < dist)
                         {
-                            cerr << fixed << s.at(t_x).len() << " | " << dist << " > " << t_x << endl;
                             shadow = true;
                             break;
                         }
@@ -138,6 +136,12 @@ color ray_color(const scene_st &scene, const ray &r)
 
                 double cos_a = max(0, dot(n, h));
                 c += mat.specular * pow(cos_a, mat.phong_exp) * E_i;
+
+                if (mat.mirror_refl.len() > 0 && depth > 0)
+                {
+                    vec3 w_r = -w_o + 2 * n * dot(n, w_o);
+                    c += mat.mirror_refl * ray_color(scene, ray(x + w_r * EPS, w_r), depth - 1);
+                }
             }
         }
     }
@@ -155,7 +159,7 @@ int main(void)
         for (int i = 0; i < scene.camera.nx; ++i)
         {
             ray r = eye_ray_to_pixel(scene.camera, i, j);
-            write_color(cout, ray_color(scene, r));
+            write_color(cout, ray_color(scene, r, scene.max_depth));
         }
     }
 
