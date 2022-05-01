@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "pugixml-1.12/src/pugixml.hpp"
+#include "pugixml/pugixml.hpp"
 #include "scene_def.h"
 #include <sstream>
 
@@ -29,10 +29,22 @@ vector<vec3> str_to_vv3(const char* str){
     return vv3;
 }
 
-scene_st scene_from_file(const char* path){
+void field_error(const char* field_name){
+    cerr << "Error loading field: " << field_name << endl;
+}
+
+bool scene_from_file(scene_st &scene,const char* path){
 
     xml_document doc;
     xml_parse_result res = doc.load_file(path,parse_trim_pcdata);
+
+    // if(res != status_ok){
+    //     cerr << res << endl;
+    //     cerr << path << endl;
+    //     // cerr << res.description() << " " << res.offset << endl;
+    //     return false;
+    // }
+
     xml_node sc = doc.child("scene");
     xml_node camera = sc.child("camera");
     xml_node lights = sc.child("lights");
@@ -40,8 +52,8 @@ scene_st scene_from_file(const char* path){
     xml_node vdata = sc.child("vertexdata");
     xml_node objs = sc.child("objects");
 
-    scene_st scene;
     vector<double> tok;
+    string buf;
 
     scene.max_depth = stoi(sc.child_value("maxraytracedepth"));
     scene.background = v_to_v3(tokenize(sc.child_value("background")));
@@ -90,5 +102,5 @@ scene_st scene_from_file(const char* path){
         scene.objects.push_back(mesh);
     }    
 
-    return scene;
+    return true;
 }
