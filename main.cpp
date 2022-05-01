@@ -3,6 +3,8 @@
 #include "ray.h"
 #include "scene_def.h"
 #include <time.h>
+#include <thread>
+#include <chrono>
 using namespace std;
 
 #define EPS 0.000001
@@ -149,6 +151,64 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
     return c;
 }
 
+struct thread_info
+{
+    int start_pixel=0, n_pixel=0;
+    vector<color> pixels;
+};
+
+void thread_job(thread_info &info,const scene_st& scene)
+{
+    int nx = scene.camera.nx;
+
+    for (int i = info.start_pixel,j=info.start_pixel/nx; i < info.start_pixel + info.n_pixel; ++i)
+    {
+        if(i%nx == 0) ++j;
+        ray r = eye_ray_to_pixel(scene.camera, i%nx, j);
+        info.pixels.push_back(ray_color(scene, r, scene.max_depth));
+    }
+
+}
+
+void raytracing_threaded(scene_st &scene)
+{
+    const int nThreads = std::thread::hardware_concurrency();
+    // const int nThreads = 1;
+
+    thread_info info[nThreads];
+    int total_pixel = scene.camera.nx * scene.camera.ny;
+    int n_pixel = total_pixel / nThreads;
+    int leftover = total_pixel % nThreads;
+
+    cerr << "N: " << n_pixel << " l: " << leftover << endl;
+
+    for(int i=0;i<nThreads;++i){
+        info[i].start_pixel = i*n_pixel;
+        info[i].n_pixel = n_pixel;
+    }
+    info[nThreads-1].n_pixel += leftover;
+
+auto started = std::chrono::high_resolution_clock::now();
+    thread th[nThreads];
+    for(int i=0;i<nThreads;++i){
+        th[i] = thread(thread_job,ref(info[i]),ref(scene));
+    }
+    for(int i=0;i<nThreads;++i){
+        th[i].join();
+    }
+auto done = std::chrono::high_resolution_clock::now();
+std::cerr << "Nthread, exectime " << nThreads << ", " <<std::chrono::duration_cast<std::chrono::milliseconds>(done-started).count() << endl;
+    
+    std::cout << "P3\n"
+              << scene.camera.nx << " " << scene.camera.ny << "\n255\n";
+    for(int i=0;i<nThreads;++i){
+        for(color c:info[i].pixels){
+            write_color(cout,c);
+        }
+    }
+
+}
+
 int main(int argc, char const *argv[])
 {
     if (argc < 2)
@@ -162,22 +222,16 @@ int main(int argc, char const *argv[])
         cerr << "PARSING ERROR, TERMINATING." << endl;
         return -1;
     }
-    time_t timer;
-    struct tm y2k = {0};
-    time(&timer);
-    double sec1 = difftime(timer, mktime(&y2k));
-    std::cout << "P3\n"
-              << scene.camera.nx << " " << scene.camera.ny << "\n255\n";
-    for (int j = 0; j < scene.camera.ny; ++j)
-    {
-        for (int i = 0; i < scene.camera.nx; ++i)
-        {
-            ray r = eye_ray_to_pixel(scene.camera, i, j);
-            write_color(cout, ray_color(scene, r, scene.max_depth));
-        }
-    }
-    time(&timer);
-    double sec2 = difftime(timer, mktime(&y2k));
-    cerr << sec2 - sec1 << endl;
+    // std::cout << "P3\n"
+    //           << scene.camera.nx << " " << scene.camera.ny << "\n255\n";
+    // for (int j = 0; j < scene.camera.ny; ++j)
+    // {
+    //     for (int i = 0; i < scene.camera.nx; ++i)
+    //     {
+    //         ray r = eye_ray_to_pixel(scene.camera, i, j);
+    //         write_color(cout, ray_color(scene, r, scene.max_depth));
+    //     }
+    // }
+    raytracing_threaded(scene);
     return 0;
 }

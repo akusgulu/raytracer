@@ -15,7 +15,7 @@ using namespace std;
 struct camera_st
 {
     point3 position;
-    vec3 u,v,w;
+    vec3 u, v, w;
     double np[4];
     double near_distance;
     int nx, ny;
@@ -45,7 +45,7 @@ struct scene_st
     color background{0, 0, 0};
     camera_st camera;
     color ambient_light{0, 0, 0};
-    map<string,material_st> materials;
+    map<string, material_st> materials;
     vector<pointlight_st> p_lights;
     vector<vec3> verts;
     vector<mesh_st> objects;
@@ -84,6 +84,6 @@ struct scene_st
 
 // }
 
-scene_st scene_from_file(const char* path);
+bool scene_from_file(scene_st &scene, const char *path);
 
 #endif
