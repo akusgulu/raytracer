@@ -91,14 +91,11 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
         }
     }
 
-    vec3 n;
-    if (t_min < numeric_limits<double>::infinity())
-        n = unit_vec(cross(scene.verts[face.y - 1] - scene.verts[face.x - 1], scene.verts[face.z - 1] - scene.verts[face.x - 1]));
-
     color c = scene.background;
 
     if (mat_id != "")
     {
+        vec3 n = unit_vec(cross(scene.verts[face.y - 1] - scene.verts[face.x - 1], scene.verts[face.z - 1] - scene.verts[face.x - 1]));
         mat = scene.materials.at(mat_id);
         c = mat.ambient * scene.ambient_light;
         for (auto l : scene.p_lights)
@@ -106,7 +103,7 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
             point3 x = r.at(t_min);
             vec3 l_to_x = l.position - x;
             vec3 w_i = unit_vec(l_to_x);
-            double dist = l_to_x.len();
+            double dist_l = l_to_x.len();
             bool shadow = false;
             ray s = ray(x + EPS * w_i, w_i);
             for (auto o : scene.objects)
@@ -116,7 +113,8 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
                     double t_x;
                     if (intersect(s, scene.verts[f.x - 1], scene.verts[f.y - 1], scene.verts[f.z - 1], t_x, 0, INF))
                     {
-                        if (s.at(t_x).len() < dist)
+                        double dist_obj = (s.at(t_x) - s.origin()).len(); 
+                        if (dist_obj < dist_l)
                         {
                             shadow = true;
                             break;
@@ -129,9 +127,9 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
 
             if (!shadow)
             {
-                color E_i = l.intensity / pow(dist, 2);
+                color E_i = l.intensity / pow(dist_l, 2);
                 double cos_t = max(0, dot(n, w_i));
-
+                
                 c += mat.diffuse * cos_t * E_i;
 
                 vec3 w_o = unit_vec(scene.camera.position - r.at(t));
