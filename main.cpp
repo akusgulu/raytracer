@@ -2,6 +2,7 @@
 #include <limits>
 #include "ray.h"
 #include "scene_def.h"
+#include <time.h>
 using namespace std;
 
 #define EPS 0.000001
@@ -148,10 +149,23 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
     return c;
 }
 
-int main(void)
+int main(int argc, char const *argv[])
 {
-    scene_st scene = scene_from_file("scenes/scene3.xml");
+    if (argc < 2)
+    {
+        cerr << "No scene specified" << endl;
+    }
 
+    scene_st scene;
+    if (!scene_from_file(scene, argv[1]))
+    {
+        cerr << "PARSING ERROR, TERMINATING." << endl;
+        return -1;
+    }
+    time_t timer;
+    struct tm y2k = {0};
+    time(&timer);
+    double sec1 = difftime(timer, mktime(&y2k));
     std::cout << "P3\n"
               << scene.camera.nx << " " << scene.camera.ny << "\n255\n";
     for (int j = 0; j < scene.camera.ny; ++j)
@@ -162,6 +176,8 @@ int main(void)
             write_color(cout, ray_color(scene, r, scene.max_depth));
         }
     }
-
+    time(&timer);
+    double sec2 = difftime(timer, mktime(&y2k));
+    cerr << sec2 - sec1 << endl;
     return 0;
 }
