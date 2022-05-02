@@ -149,6 +149,7 @@ bool scene_from_file(scene_st &scene, const char *path)
     mesh_st mesh;
     for (auto o : objs.children("mesh"))
     {
+        mesh.faces.clear();
         string id = o.attribute("id").value();
         if (is_valid(o.child_value("materialid"), id, ".materialid",err))
             mesh.material_id = o.child_value("materialid");
