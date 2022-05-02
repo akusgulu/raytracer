@@ -29,6 +29,7 @@ void write_color(std::ostream &out, color pixel_color)
 
 ray eye_ray_to_pixel(const camera_st &camera, const int i, const int j)
 {
+    // hold these calculations in camera or scene or sth much less calculation
     point3 m = camera.position - camera.w * camera.near_distance;
     point3 q = m + camera.np[LEFT] * camera.u + camera.np[RIGHT] * camera.v;
     double s_u = (i + 0.5) * (camera.np[RIGHT] - camera.np[LEFT]) / camera.nx;
@@ -43,9 +44,9 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
     double t_min = numeric_limits<double>::infinity();
     double t;
     string mat_id = "";
-    
-    vec3 n;
 
+    vec3 n;
+    // scene.hit, calculate
     for (auto &o : scene.objects)
     {
         for (auto &f : o.faces)
@@ -67,6 +68,8 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
         point3 x = r.at(t_min);
         const material_st &mat = scene.materials.at(mat_id);
         c = mat.ambient * scene.ambient_light;
+        vec3 w_o = unit_vec(scene.camera.position - r.at(t_min));
+
         for (auto &l : scene.p_lights)
         {
             vec3 l_to_x = l.position - x;
@@ -92,7 +95,6 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
                 if (shadow)
                     break;
             }
-
             if (!shadow)
             {
                 color E_i = l.intensity / pow(dist_l, 2);
@@ -105,13 +107,12 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
 
                 double cos_a = max(0, dot(n, h));
                 c += mat.specular * pow(cos_a, mat.phong_exp) * E_i;
-
-                if (mat.mirror_refl.len() > 0 && depth > 0)
-                {
-                    vec3 w_r = -w_o + 2 * n * dot(n, w_o);
-                    c += mat.mirror_refl * ray_color(scene, ray(x + w_r * EPS, w_r), depth - 1);
-                }
             }
+        }
+        if (mat.mirror_refl.len() > 0 && depth > 0)
+        {
+            vec3 w_r = -w_o + 2 * n * dot(n, w_o);
+            c += mat.mirror_refl * ray_color(scene, ray(x + w_r * EPS, w_r), depth - 1);
         }
     }
     return c;
@@ -123,7 +124,7 @@ struct thread_info
     vector<color> pixels;
 };
 
-void thread_job(thread_info &info, const scene_st& scene)
+void thread_job(thread_info &info, const scene_st &scene)
 {
     int nx = scene.camera.nx;
     cerr << &scene << endl;
@@ -159,7 +160,7 @@ void raytracing_threaded(scene_st &scene)
     thread th[nThreads];
     for (int i = 0; i < nThreads; ++i)
     {
-        th[i] = thread(thread_job,ref(info[i]),cref(scene));
+        th[i] = thread(thread_job, ref(info[i]), cref(scene));
     }
     void *status;
     for (int i = 0; i < nThreads; ++i)
