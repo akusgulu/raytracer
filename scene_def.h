@@ -1,6 +1,7 @@
 #ifndef SCENE_DEF_H
 #define SCENE_DEF_H
 #include "vec3.h"
+#include "ray.h"
 
 #include <vector>
 #include <map>
@@ -33,10 +34,47 @@ struct material_st
     double phong_exp;
 };
 
+struct triangle
+{
+    point3 v0, v1, v2;
+    bool intersect(const ray &r, const double &t_min, const double &t_max, double &t) const
+    {
+        const double EPSILON = 0.000001;
+
+        vec3 e1 = v1 - v0;
+        vec3 e2 = v2 - v0;
+
+        vec3 pvec = cross(r.direction(), e2);
+        double det = dot(e1, pvec);
+
+        if (det > -EPSILON && det < EPSILON)
+            return false;
+        double inv_det = 1.0 / det;
+
+        vec3 tvec = r.origin() - v0;
+        double u = dot(tvec, pvec) * inv_det;
+        if (u < 0.0 || u > 1.0)
+            return false;
+
+        vec3 qvec = cross(tvec, e1);
+
+        double v = dot(r.direction(), qvec) * inv_det;
+        if (v < 0.0 || u + v > 1.0)
+            return false;
+
+        t = dot(e2, qvec) * inv_det;
+
+        return t > t_min && t < t_max;
+    }
+    vec3 normal() const{
+        return unit_vec(cross(v1 - v0, v2 - v0));
+    }
+};
+
 struct mesh_st
 {
     string material_id;
-    vector<vec3> faces;
+    vector<triangle> faces;
 };
 
 struct scene_st
@@ -50,39 +88,6 @@ struct scene_st
     vector<vec3> verts;
     vector<mesh_st> objects;
 };
-
-// void print_scene(const scene_st& scene){
-//     cout << scene.max_depth << endl;
-//     cout << scene.background << endl;
-
-//     cout << scene.camera.position << endl;
-//     cout << scene.camera.u << " " << scene.camera.v << " " << scene.camera.w << endl;
-//     for(int i=LEFT;i<=BOTTOM;++i){
-//         cout << scene.camera.np[i] << " ";
-//     }
-//     cout << endl;
-//     cout << scene.camera.near_distance << endl;
-//     cout << scene.camera.nx << " " << scene.camera.ny << endl;
-
-//     cout << scene.ambient_light << endl;
-//     for(auto m:scene.materials){
-//         cout << m.first << endl;
-//         cout << m.second.ambient << " " << m.second.diffuse << " " << m.second.specular;
-//         cout << m.second.mirror_refl << " " << m.second.phong_exp << endl;
-//     }
-
-//     for(auto v:scene.verts){
-//         cout << v << endl;
-//     }
-
-//     for(auto o:scene.objects){
-//         cout << o.material_id << endl;
-//         for(auto f:o.faces){
-//             cout << f << endl;
-//         }
-//     }
-
-// }
 
 bool scene_from_file(scene_st &scene, const char *path);
 

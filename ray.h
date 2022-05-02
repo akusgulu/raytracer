@@ -11,10 +11,10 @@ public:
         this->d = direction;
     }
 
-    point3 origin() const { return o; }
-    vec3 direction() const { return d; }
+    inline point3 origin() const { return o; }
+    inline vec3 direction() const { return d; }
 
-    point3 at(const double t) const
+    inline point3 at(const double t) const
     {
         return o + t * d;
     }
@@ -24,9 +24,9 @@ private:
     vec3 d;
 };
 
-std::ostream &operator<<(std::ostream &out, const ray& r)
-{
-    return out << r.origin() << " + " << r.direction();
-}
+// std::ostream &operator<<(std::ostream &out, const ray& r)
+// {
+//     return out << r.origin() << " + " << r.direction();
+// }
 
 #endif

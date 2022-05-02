@@ -1,3 +1,7 @@
 *.ppm
 *.out
 *.xml
+pugixml/
+scenes/
+.vscode/
+imgs/
