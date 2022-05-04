@@ -31,7 +31,7 @@ struct pointlight_st
 struct material_st
 {
     color ambient, diffuse, specular, mirror_refl;
-    double phong_exp;
+    double phong_exp{0};
 };
 
 struct triangle

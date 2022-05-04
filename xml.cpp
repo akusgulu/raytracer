@@ -28,14 +28,14 @@ vector<vec3> str_to_vv3(const char *str)
 {
     vector<double> v = tokenize(str);
     vector<vec3> vv3;
-    for (int i = 0; i < v.size(); i += 3)
+    for (size_t i = 0; i < v.size(); i += 3)
         vv3.push_back(point3(v[i], v[i + 1], v[i + 2]));
     return vv3;
 }
 
-bool is_valid(const char_t *p, const string &error_msg,bool& err)
+bool is_valid(const string& p, const string &error_msg,bool& err)
 {
-    if (p == "")
+    if (p.length() == 0)
     {
         cerr << "XML error: " << error_msg << " not found" << endl;
         err &= false;
@@ -55,7 +55,7 @@ bool scene_from_file(scene_st &scene, const char *path)
     bool err = true;
     
     xml_document doc;
-    xml_parse_result res = doc.load_file(path, parse_trim_pcdata);
+    doc.load_file(path, parse_trim_pcdata);
 
     if(!doc.first_child()){
         cerr << "Error: Can't open input file!" << endl;
@@ -65,7 +65,6 @@ bool scene_from_file(scene_st &scene, const char *path)
     xml_node camera = sc.child("camera");
     xml_node lights = sc.child("lights");
     xml_node materials = sc.child("materials");
-    xml_node vdata = sc.child("vertexdata");
     xml_node objs = sc.child("objects");
 
     vector<double> tok;

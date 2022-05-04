@@ -43,7 +43,7 @@ ray eye_ray_to_pixel(const camera_st &camera, const int i, const int j)
 color ray_color(const scene_st &scene, const ray &r, const double depth)
 {
     double t_min = numeric_limits<double>::infinity();
-    double t;
+    double t{0};
     string mat_id = "";
     vec3 n;
     // scene.hit, calculate
@@ -161,7 +161,6 @@ void raytracing_threaded(scene_st &scene)
     {
         th[i] = thread(thread_job, ref(info[i]), cref(scene));
     }
-    void *status;
     for (int i = 0; i < nThreads; ++i)
     {
         th[i].join();
