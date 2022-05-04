@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <fstream>
 #include "pugixml-1.12/src/pugixml.hpp"
 #include "scene_def.h"
 #include <sstream>
@@ -38,10 +38,10 @@ bool is_valid(const char_t *p, const string &error_msg,bool& err)
     if (p == "")
     {
         cerr << "XML error: " << error_msg << " not found" << endl;
-        err |= true;
-        return false;
+        err &= false;
+        return err |= false;
     }
-    err |= false;
+    err &= true;
     return true;
 }
 
@@ -52,17 +52,15 @@ inline bool is_valid(const char_t *p, const string &id, const string &error_msg,
 
 bool scene_from_file(scene_st &scene, const char *path)
 {
-    bool err = false;
+    bool err = true;
+    
     xml_document doc;
     xml_parse_result res = doc.load_file(path, parse_trim_pcdata);
 
-    // if(res != status_ok){
-    //     cerr << res << endl;
-    //     cerr << path << endl;
-    //     // cerr << res.description() << " " << res.offset << endl;
-    //     return false;
-    // }
-
+    if(!doc.first_child()){
+        cerr << "Error: Can't open input file!" << endl;
+        return false;
+    }
     xml_node sc = doc.child("scene");
     xml_node camera = sc.child("camera");
     xml_node lights = sc.child("lights");
@@ -124,7 +122,6 @@ bool scene_from_file(scene_st &scene, const char *path)
     for (auto mat : materials.children("material"))
     {
         string id = mat.attribute("id").value();
-        cerr << id << endl;
         if (is_valid(mat.child_value("ambient"), id, ".ambient",err))
             m.ambient = v_to_v3(tokenize(mat.child_value("ambient")));
 

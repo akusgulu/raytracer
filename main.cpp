@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <limits>
 #include "ray.h"
 #include "scene_def.h"
@@ -62,7 +63,7 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
     color c = scene.background;
 
     if (mat_id != "")
-    {  
+    {
         n = unit_vec(n);
         point3 x = r.at(t_min);
         const material_st &mat = scene.materials.at(mat_id);
@@ -126,8 +127,8 @@ struct thread_info
 
 void thread_job(thread_info &info, const scene_st &scene)
 {
+    fprintf(stdout, "Calculating pixels [%d,%d]...\n", info.start_pixel, info.start_pixel + info.n_pixel);
     int nx = scene.camera.nx;
-    cerr << &scene << endl;
     for (int i = info.start_pixel, j = info.start_pixel / nx; i < info.start_pixel + info.n_pixel; ++i)
     {
         if (i % nx == 0)
@@ -136,19 +137,17 @@ void thread_job(thread_info &info, const scene_st &scene)
         info.pixels.push_back(ray_color(scene, r, scene.max_depth));
     }
 
-    fprintf(stderr, "Pixels [%d,%d] are calculated\n", info.start_pixel, info.start_pixel + info.n_pixel);
+    fprintf(stdout, "Pixels [%d,%d] are calculated\n", info.start_pixel, info.start_pixel + info.n_pixel);
 }
 
 void raytracing_threaded(scene_st &scene)
 {
-    const int nThreads = 8;
+    const int nThreads = thread::hardware_concurrency();
 
     thread_info info[nThreads];
     int total_pixel = scene.camera.nx * scene.camera.ny;
     int n_pixel = total_pixel / nThreads;
     int leftover = total_pixel % nThreads;
-
-    cerr << "N: " << n_pixel << " l: " << leftover << endl;
 
     for (int i = 0; i < nThreads; ++i)
     {
@@ -168,13 +167,17 @@ void raytracing_threaded(scene_st &scene)
         th[i].join();
     }
 
-    std::cout << "P3\n"
-              << scene.camera.nx << " " << scene.camera.ny << "\n255\n";
+    ofstream out{"rtrace_out.ppm", ios::out};
+    if (!out.is_open())
+        cerr << "Error: Output file cannot be created." << endl;
+
+    out << "P3\n"
+        << scene.camera.nx << " " << scene.camera.ny << "\n255\n";
     for (int i = 0; i < nThreads; ++i)
     {
         for (color &c : info[i].pixels)
         {
-            write_color(cout, c);
+            write_color(out, c);
         }
     }
 }
@@ -183,10 +186,11 @@ int main(int argc, char const *argv[])
 {
     if (argc < 2)
     {
-        cerr << "No scene specified" << endl;
+        cerr << "No scene specified!" << endl;
+        cerr << "Usage: ./rtrace <path_to_scene>" << endl;
     }
     scene_st scene;
-    if (scene_from_file(scene, argv[1]))
+    if (!scene_from_file(scene, argv[1]))
     {
         cerr << "PARSING ERROR, TERMINATING." << endl;
         return -1;
