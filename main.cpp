@@ -6,7 +6,7 @@
 
 using namespace std;
 
-#define EPS 0.000001
+#define EPS 0.0001
 #define INF numeric_limits<double>::infinity()
 
 double max(const double a, const double b)
@@ -44,7 +44,6 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
     double t_min = numeric_limits<double>::infinity();
     double t;
     string mat_id = "";
-
     vec3 n;
     // scene.hit, calculate
     for (auto &o : scene.objects)
@@ -64,16 +63,15 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
 
     if (mat_id != "")
     {
-        // vec3 n = face->normal();
         point3 x = r.at(t_min);
         const material_st &mat = scene.materials.at(mat_id);
         c = mat.ambient * scene.ambient_light;
-        vec3 w_o = unit_vec(scene.camera.position - r.at(t_min));
+        vec3 w_o = scene.camera.position - r.at(t_min);
 
         for (auto &l : scene.p_lights)
         {
             vec3 l_to_x = l.position - x;
-            vec3 w_i = unit_vec(l_to_x);
+            vec3 w_i = l_to_x;
             double dist_l = l_to_x.len();
             bool shadow = false;
             ray s = ray(x + EPS * w_i, w_i);
@@ -106,6 +104,7 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
                 vec3 h = unit_vec(w_i + w_o);
 
                 double cos_a = max(0, dot(n, h));
+
                 c += mat.specular * pow(cos_a, mat.phong_exp) * E_i;
             }
         }

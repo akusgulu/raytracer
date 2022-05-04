@@ -67,7 +67,7 @@ struct triangle
         return t > t_min && t < t_max;
     }
     vec3 normal() const{
-        return unit_vec(cross(v1 - v0, v2 - v0));
+        return cross(v1 - v0, v2 - v0);
     }
 };
 
