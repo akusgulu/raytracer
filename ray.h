@@ -24,9 +24,4 @@ private:
     vec3 d;
 };
 
-// std::ostream &operator<<(std::ostream &out, const ray& r)
-// {
-//     return out << r.origin() << " + " << r.direction();
-// }
-
 #endif
