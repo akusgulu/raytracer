@@ -36,38 +36,44 @@ struct material_st
 
 struct triangle
 {
+public:
     point3 v0, v1, v2;
+
+    vec3 normal() const
+    {
+        return cross(v1 - v0, v2 - v0);
+    }
+
     bool intersect(const ray &r, const double &t_min, const double &t_max, double &t) const
     {
         const double EPSILON = 0.000001;
 
-        vec3 e1 = v1 - v0;
-        vec3 e2 = v2 - v0;
-
-        vec3 pvec = cross(r.direction(), e2);
-        double det = dot(e1, pvec);
-
-        if (det > -EPSILON && det < EPSILON)
-            return false;
-        double inv_det = 1.0 / det;
-
-        vec3 tvec = r.origin() - v0;
-        double u = dot(tvec, pvec) * inv_det;
-        if (u < 0.0 || u > 1.0)
+        vec3 a_b = v0 - v1;
+        vec3 a_c = v0 - v2;
+        double detA = determinant(a_b, a_c, r.direction());
+        if (detA > -EPSILON && detA < EPSILON)
             return false;
 
-        vec3 qvec = cross(tvec, e1);
+        vec3 a_o = v0 - r.origin();
+        double inv_detA = 1.0 / detA;
 
-        double v = dot(r.direction(), qvec) * inv_det;
-        if (v < 0.0 || u + v > 1.0)
+        double beta = determinant(a_o, a_c, r.direction()) * inv_detA;
+        if (beta < 0.0 || beta > 1.0)
             return false;
 
-        t = dot(e2, qvec) * inv_det;
+        double gamma = determinant(a_b, a_o, r.direction()) * inv_detA;
+        if (gamma < 0.0 || beta + gamma > 1.0)
+            return false;
+
+        t = determinant(a_b, a_c, a_o) * inv_detA;
 
         return t > t_min && t < t_max;
     }
-    vec3 normal() const{
-        return cross(v1 - v0, v2 - v0);
+
+private:
+    inline double determinant(const vec3 &col1, const vec3 &col2, const vec3 &col3) const
+    {
+        return col1.x * (col2.y * col3.z - col3.y * col2.z) + col1.y * (col3.x * col2.z - col3.z * col2.x) + col1.z * (col2.x * col3.y - col2.y * col3.x);
     }
 };
 
