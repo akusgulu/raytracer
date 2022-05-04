@@ -62,16 +62,17 @@ color ray_color(const scene_st &scene, const ray &r, const double depth)
     color c = scene.background;
 
     if (mat_id != "")
-    {
+    {  
+        n = unit_vec(n);
         point3 x = r.at(t_min);
         const material_st &mat = scene.materials.at(mat_id);
         c = mat.ambient * scene.ambient_light;
-        vec3 w_o = scene.camera.position - r.at(t_min);
+        vec3 w_o = unit_vec(scene.camera.position - r.at(t_min));
 
         for (auto &l : scene.p_lights)
         {
             vec3 l_to_x = l.position - x;
-            vec3 w_i = l_to_x;
+            vec3 w_i = unit_vec(l_to_x);
             double dist_l = l_to_x.len();
             bool shadow = false;
             ray s = ray(x + EPS * w_i, w_i);
