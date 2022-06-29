@@ -1,0 +1,88 @@
+<scene>
+    <maxraytracedepth>6</maxraytracedepth>
+    <background>0 0 10</background>
+    <camera>
+        <position>0 0 0</position>
+        <gaze>0 0 -1</gaze>
+        <up>0 1 0</up>
+        <nearplane>-1 1 -1 1</nearplane>
+        <neardistance> 1 </neardistance>
+        <imageresolution>1280 720</imageresolution>
+    </camera>
+    <lights>
+        <ambientlight>25 25 25</ambientlight>
+        <pointlight id="1">
+            <position>-0.28 0.21 -0.22</position>
+            <intensity>1000 1000 1000</intensity>
+        </pointlight>
+        <!-- <pointlight id="2">
+            <position> 0 0 1 </position>
+            <intensity>
+                1000 1000 1100
+                </intensity>
+        </pointlight> -->
+    </lights>
+    <materials>
+        <material id="1">
+            <ambient>
+                1 1 1
+                </ambient>
+            <diffuse>1 1 1</diffuse>
+            <specular>1 1 1</specular>
+            <phongexponent>1</phongexponent>
+            <mirrorreflectance>
+                    0 0 0
+                    </mirrorreflectance>
+        </material>
+        <material id="2">
+            <ambient>
+                1 1 1
+                </ambient>
+            <diffuse>0 0 1</diffuse>
+            <specular>0 0 1</specular>
+            <phongexponent>1</phongexponent>
+            <mirrorreflectance>
+                    0.5 0.5 0.5
+                    </mirrorreflectance>
+        </material>
+    </materials>
+    <vertexdata>0.138118 0.100000 -0.278352
+        0.020125 0.100000 -0.439838
+        0.138118 -0.100000 -0.278352
+        0.020125 -0.100000 -0.439838
+        -0.023368 0.100000 -0.160359
+        -0.141361 0.100000 -0.321845
+        -0.023368 -0.100000 -0.160359
+        -0.141361 -0.100000 -0.321845
+        -1.000000 -0.103624 -1.455763
+1.000000 -0.123624 -1.455763
+-1.000000 -0.123624 0.544237
+1.000000 -0.123624 0.544237
+</vertexdata>
+    <objects>
+        <mesh id="cube">
+            <materialid>1</materialid>
+            <faces>
+                5 3 1
+                3 8 4
+                7 6 8
+                2 8 6
+                1 4 2
+                5 2 6
+                5 7 3
+                3 7 8
+                7 5 6
+                2 4 8
+                1 3 4
+                5 1 2
+</faces>
+        </mesh>
+        <mesh id="plane">
+            <materialid>2</materialid>
+            <faces>
+                11 10 9
+                12 10 11
+</faces>
+        </mesh>
+    </objects>
+</scene>
