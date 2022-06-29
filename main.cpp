@@ -4,6 +4,7 @@
 #include "ray.h"
 #include "scene_def.h"
 #include <thread>
+#include <chrono>
 
 using namespace std;
 
@@ -156,6 +157,7 @@ void raytracing_threaded(scene_st &scene)
     }
     info[nThreads - 1].n_pixel += leftover;
 
+    auto start = chrono::high_resolution_clock::now();
     thread th[nThreads];
     for (int i = 0; i < nThreads; ++i)
     {
@@ -165,6 +167,8 @@ void raytracing_threaded(scene_st &scene)
     {
         th[i].join();
     }
+    auto duration = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now()-start);
+    cout << "Rendering is completed in " << duration.count()/1000.0 << " seconds.\n";
 
     ofstream out{"rtrace_out.ppm", ios::out};
     if (!out.is_open())
