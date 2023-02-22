@@ -1,5 +1,4 @@
 *.ppm
 *.out
-pugixml/
 .vscode/
-imgs/
+build/
