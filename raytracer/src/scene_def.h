@@ -13,8 +13,7 @@ using namespace std;
 #define TOP 2
 #define BOTTOM 3
 
-struct camera_st
-{
+struct camera_st {
     point3 position;
     vec3 u, v, w;
     double np[4];
@@ -22,30 +21,26 @@ struct camera_st
     int nx, ny;
 };
 
-struct pointlight_st
-{
+struct pointlight_st {
     point3 position;
     color intensity;
 };
 
-struct material_st
-{
+struct material_st {
     color ambient, diffuse, specular, mirror_refl;
     double phong_exp{0};
 };
 
-struct triangle
-{
-public:
+struct triangle {
+  public:
     point3 v0, v1, v2;
 
-    vec3 normal() const
-    {
+    vec3 normal() const {
         return cross(v1 - v0, v2 - v0);
     }
 
-    bool intersect(const ray &r, const double &t_min, const double &t_max, double &t) const
-    {
+    bool intersect(const ray &r, const double &t_min, const double &t_max,
+                   double &t) const {
         const double EPSILON = 0.000001;
 
         vec3 a_b = v0 - v1;
@@ -70,21 +65,21 @@ public:
         return t > t_min && t < t_max;
     }
 
-private:
-    inline double determinant(const vec3 &col1, const vec3 &col2, const vec3 &col3) const
-    {
-        return col1.x * (col2.y * col3.z - col3.y * col2.z) + col1.y * (col3.x * col2.z - col3.z * col2.x) + col1.z * (col2.x * col3.y - col2.y * col3.x);
+  private:
+    inline double determinant(const vec3 &col1, const vec3 &col2,
+                              const vec3 &col3) const {
+        return col1.x * (col2.y * col3.z - col3.y * col2.z) +
+               col1.y * (col3.x * col2.z - col3.z * col2.x) +
+               col1.z * (col2.x * col3.y - col2.y * col3.x);
     }
 };
 
-struct mesh_st
-{
+struct mesh_st {
     string material_id;
     vector<triangle> faces;
 };
 
-struct scene_st
-{
+struct scene_st {
     unsigned max_depth = 0;
     color background{0, 0, 0};
     camera_st camera;
