@@ -10,7 +10,7 @@ struct Camera {
     double near_dist;
     int nx, ny;
 
-    ray ray_to_pixel(const int i, const int j) {
+    ray ray_to_pixel(const int i, const int j) const {
         point3 m = position - w * near_dist;
         point3 q = m + np_l * u + np_r * v;
         double s_u = (i + 0.5) * (np_r - np_l) / nx;
