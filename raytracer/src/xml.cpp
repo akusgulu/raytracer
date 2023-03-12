@@ -2,8 +2,9 @@
 #include <fstream>
 #include <pugixml.hpp>
 #include <sstream>
+#include "scene.h"
+#include "mesh.h"
 
-#include "scene_def.h"
 using namespace pugi;
 using namespace std;
 
@@ -11,6 +12,16 @@ vector<double> tokenize(const char *str) {
     vector<double> tokens;
     stringstream ss{str};
     double n;
+    while (ss >> n) {
+        tokens.push_back(n);
+    }
+    return tokens;
+}
+
+vector<int> tokenize_int(const char *str) {
+    vector<int> tokens;
+    stringstream ss{str};
+    int n;
     while (ss >> n) {
         tokens.push_back(n);
     }
@@ -44,7 +55,7 @@ inline bool is_valid(const char_t *p, const string &id, const string &error_msg,
     return is_valid(p, id + error_msg, err);
 }
 
-bool scene_from_file(scene_st &scene, const char *path) {
+bool scene_from_xml_file(Scene &scene, const char *path) {
     bool err = true;
 
     xml_document doc;
@@ -62,8 +73,9 @@ bool scene_from_file(scene_st &scene, const char *path) {
 
     vector<double> tok;
 
-    if (is_valid(sc.child_value("maxraytracedepth"), "-maxraytracedepth-", err))
-        scene.max_depth = stoi(sc.child_value("maxraytracedepth"));
+    // if (is_valid(sc.child_value("maxraytracedepth"), "-maxraytracedepth-",
+    // err))
+    //     scene.max_depth = stoi(sc.child_value("maxraytracedepth"));
 
     if (is_valid(sc.child_value("background"), "-background-", err))
         scene.background = v_to_v3(tokenize(sc.child_value("background")));
@@ -82,14 +94,14 @@ bool scene_from_file(scene_st &scene, const char *path) {
 
     if (is_valid(camera.child_value("nearplane"), "-camera.nearplane-", err))
         tok = tokenize(camera.child_value("nearplane"));
-    scene.camera.np[LEFT] = tok[0];
-    scene.camera.np[RIGHT] = tok[1];
-    scene.camera.np[BOTTOM] = tok[2];
-    scene.camera.np[TOP] = tok[3];
+    scene.camera.np_l = tok[0];
+    scene.camera.np_r = tok[1];
+    scene.camera.np_b = tok[2];
+    scene.camera.np_t = tok[3];
 
     if (is_valid(camera.child_value("neardistance"), "-camera.neardistance-",
                  err))
-        scene.camera.near_distance = stod(camera.child_value("neardistance"));
+        scene.camera.near_dist = stod(camera.child_value("neardistance"));
 
     if (is_valid(camera.child_value("imageresolution"),
                  "camera.imageresolution-", err))
@@ -98,10 +110,9 @@ bool scene_from_file(scene_st &scene, const char *path) {
     scene.camera.ny = tok[1];
 
     if (is_valid(lights.child_value("ambientlight"), "-ambientlight-", err))
-        scene.ambient_light =
-            v_to_v3(tokenize(lights.child_value("ambientlight")));
+        scene.ambient = v_to_v3(tokenize(lights.child_value("ambientlight")));
 
-    pointlight_st p;
+    Pointlight p;
     for (auto light : lights.children("pointlight")) {
         string id = light.attribute("id").value();
         if (is_valid(light.child_value("position"), id, ".position", err))
@@ -110,12 +121,13 @@ bool scene_from_file(scene_st &scene, const char *path) {
         if (is_valid(light.child_value("intensity"), id, ".intensity", err))
             p.intensity = v_to_v3(tokenize(light.child_value("intensity")));
 
-        scene.p_lights.push_back(p);
+        scene.lights.push_back(p);
     }
 
-    material_st m;
+    Material m;
     for (auto mat : materials.children("material")) {
-        string id = mat.attribute("id").value();
+        std::string id = mat.attribute("id").as_string();
+        m.id = id;
         if (is_valid(mat.child_value("ambient"), id, ".ambient", err))
             m.ambient = v_to_v3(tokenize(mat.child_value("ambient")));
 
@@ -134,26 +146,20 @@ bool scene_from_file(scene_st &scene, const char *path) {
                      err))
             m.phong_exp = stoi(mat.child_value("phongexponent"));
 
-        scene.materials[id] = m;
+        scene.materials.push_back(m);
     }
-    vector<vec3> verts;
-    if (is_valid(sc.child_value("vertexdata"), ".vertexdata", err))
-        verts = str_to_vv3(sc.child_value("vertexdata"));
 
-    mesh_st mesh;
+    if (is_valid(sc.child_value("vertexdata"), ".vertexdata", err))
+        scene.vertices = str_to_vv3(sc.child_value("vertexdata"));
+
     for (auto o : objs.children("mesh")) {
-        mesh.faces.clear();
         string id = o.attribute("id").value();
-        if (is_valid(o.child_value("materialid"), id, ".materialid", err))
-            mesh.material_id = o.child_value("materialid");
-        if (is_valid(o.child_value("faces"), id, ".faces", err)) {
-            auto faces = str_to_vv3(o.child_value("faces"));
-            for (auto f : faces) {
-                mesh.faces.push_back(
-                    {verts[f.x - 1], verts[f.y - 1], verts[f.z - 1]});
-            }
+        if (is_valid(o.child_value("materialid"), id, ".materialid", err) &&
+            is_valid(o.child_value("faces"), id, ".faces", err)) {
+            scene.hittables.push_back(
+                new Mesh(scene.vertices, tokenize_int(o.child_value("faces")),
+                         o.child_value("materialid")));
         }
-        scene.objects.push_back(mesh);
     }
 
     return err;
