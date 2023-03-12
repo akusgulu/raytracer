@@ -21,5 +21,14 @@ struct Scene {
     color background, ambient;
     std::vector<Pointlight> lights;
     std::vector<Material> materials;
-    std::vector<Hittable> hittables;
+    std::vector<Hittable *> hittables;
+
+    Material get_material(int id) const {
+        for (auto &mat : materials) {
+            if (mat.id == id) {
+                return mat;
+            }
+        }
+        return Material();
+    }
 };
