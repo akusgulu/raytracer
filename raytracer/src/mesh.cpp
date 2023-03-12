@@ -18,7 +18,7 @@ bool Mesh::hit(const ray &r, const double &t_min, const double &t_max,
     double t = -1;
     bool ret = false;
 
-    for (int j = 0; j < m_indices.size() - 2; j += 3) {
+    for (size_t j = 0; j < m_indices.size() - 2; j += 3) {
         int i0 = m_indices[j] - 1;
         int i1 = m_indices[j + 1] - 1;
         int i2 = m_indices[j + 2] - 1;

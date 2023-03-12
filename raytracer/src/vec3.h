@@ -12,6 +12,11 @@ class vec3 {
         , y{e1}
         , z{e2} {
     }
+    vec3(const vec3 &v)
+        : x{v.x}
+        , y{v.y}
+        , z{v.z} {
+    }
 
     vec3 operator-() const {
         return vec3(-x, -y, -z);

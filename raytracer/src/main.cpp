@@ -15,7 +15,6 @@ using namespace std;
 double max(const double a, const double b) {
     return a > b ? a : b;
 }
-
 color ray_color(const Scene &scene, const ray &r, const int depth) {
     HitRecord rec;
     HitRecord closest_hit;
@@ -104,25 +103,25 @@ void thread_job(thread_info &info, const Scene &scene) {
 }
 
 void raytracing_threaded(Scene &scene, Image &img) {
-    const int nThreads = thread::hardware_concurrency();
+    const unsigned int nThreads = thread::hardware_concurrency();
 
-    thread_info info[nThreads];
+    std::vector<thread_info> info{nThreads};
     int total_pixel = scene.camera.nx * scene.camera.ny;
     int n_pixel = total_pixel / nThreads;
     int leftover = total_pixel % nThreads;
 
-    for (int i = 0; i < nThreads; ++i) {
+    for (unsigned int i = 0; i < nThreads; ++i) {
         info[i].start_pixel = i * n_pixel;
         info[i].n_pixel = n_pixel;
     }
     info[nThreads - 1].n_pixel += leftover;
 
     auto start = chrono::high_resolution_clock::now();
-    thread th[nThreads];
-    for (int i = 0; i < nThreads; ++i) {
+    std::vector<thread> th{nThreads};
+    for (unsigned int i = 0; i < nThreads; ++i) {
         th[i] = thread(thread_job, ref(info[i]), cref(scene));
     }
-    for (int i = 0; i < nThreads; ++i) {
+    for (unsigned int i = 0; i < nThreads; ++i) {
         th[i].join();
     }
     auto duration = chrono::duration_cast<chrono::milliseconds>(

@@ -1,6 +1,6 @@
 #include "image.h"
 
-Image::Image(int width, int height)
+Image::Image(const int width, const int height)
     : m_width{width}
     , m_height{height} {
 
@@ -11,14 +11,14 @@ Image::~Image() {
     delete[] data;
 }
 
-void Image::set_pixel(int i, int j, color c) {
+void Image::set_pixel(const int i, const int j, const color &c) {
     if (i < 0 || i > m_width || j < 0 || j > m_height)
         return;
 
     data[j * m_width + i] = c;
 }
 
-color Image::get_pixel(int i, int j) const {
+color Image::get_pixel(const int i, const int j) const {
     if (i < 0 || i > m_width || j < 0 || j > m_height)
         return color(0, 0, 0);
 
@@ -29,7 +29,7 @@ static double max(const double a, const double b) {
     return a > b ? a : b;
 }
 
-static int clamp(double a) {
+static int clamp(const double a) {
     int x = static_cast<int>(a);
     return max(0, x > 255 ? 255 : x);
 }

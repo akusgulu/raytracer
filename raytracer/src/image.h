@@ -4,10 +4,10 @@
 
 class Image {
   public:
-    Image(int width, int height);
+    Image(const int width, const int height);
     ~Image();
-    void set_pixel(int i, int j, color c);
-    color get_pixel(int i, int j) const;
+    void set_pixel(const int i, const int j, const color &c);
+    color get_pixel(const int i, const int j) const;
     void export_ppm(std::ostream &out) const;
 
   private:
