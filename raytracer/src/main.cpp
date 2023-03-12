@@ -1,5 +1,4 @@
 #include "ray.h"
-#include "scene_def.h"
 #include "scene.h"
 #include "mesh.h"
 #include <chrono>
@@ -13,7 +12,6 @@ using namespace std;
 
 #define EPS 0.0000001
 #define INF numeric_limits<double>::infinity()
-
 double max(const double a, const double b) {
     return a > b ? a : b;
 }
@@ -26,69 +24,6 @@ int clamp(double a) {
 void write_color(std::ostream &out, color pixel_color) {
     out << clamp(pixel_color.x) << ' ' << clamp(pixel_color.y) << ' '
         << clamp(pixel_color.z) << '\n';
-}
-
-Scene dummy_scene() {
-    Scene s;
-    s.camera.position = vec3{0, 0, 0};
-    s.camera.w = -vec3{0, 0, -1};               // gaze
-    s.camera.v = vec3{0, 1, 0};                 // up
-    s.camera.u = cross(s.camera.v, s.camera.w); // cross
-    s.camera.near_dist = 1;
-    s.camera.np_l = -1;
-    s.camera.np_r = 1;
-    s.camera.np_b = -1;
-    s.camera.np_t = 1;
-    s.camera.nx = 1280;
-    s.camera.ny = 720;
-
-    s.background = color(0, 0, 10);
-    s.ambient = color(25.0, 25.0, 25.0);
-
-    Pointlight p;
-    p.position = {-0.28, 0.21, -0.22};
-    p.intensity = {1000, 1000, 1000};
-    s.lights.push_back(p);
-
-    Material m1, m2;
-
-    m1.id = 1;
-    m1.ambient = {1, 1, 1};
-    m1.diffuse = {1, 1, 1};
-    m1.specular = {0.5, 0.5, 0.5};
-    m1.mirror_refl = {0, 0, 0};
-    m1.phong_exp = 1;
-    s.materials.push_back(m1);
-
-    m2.id = 2;
-    m2.ambient = {1, 1, 1};
-    m2.diffuse = {0, 0, 1};
-    m2.specular = {0, 0, 1};
-    m2.phong_exp = 1;
-    m2.mirror_refl = {0.5, 0.5, 0.5};
-    s.materials.push_back(m2);
-
-    for (auto &mat : s.materials) {
-        cout << mat.id << endl;
-    }
-
-    std::vector<point3> verts{
-        {0.138118, 0.100000, -0.278352},   {0.020125, 0.100000, -0.439838},
-        {0.138118, -0.100000, -0.278352},  {0.020125, -0.100000, -0.439838},
-        {-0.023368, 0.100000, -0.160359},  {-0.141361, 0.100000, -0.321845},
-        {-0.023368, -0.100000, -0.160359}, {-0.141361, -0.100000, -0.321845},
-        {-1.000000, -0.103624, -1.455763}, {1.000000, -0.123624, -1.455763},
-        {-1.000000, -0.123624, 0.544237},  {1.000000, -0.123624, 0.544237}};
-    s.vertices = verts;
-    std::vector<int> cube_inds{5, 3, 1, 3, 8, 4, 7, 6, 8, 2, 8, 6,
-                               1, 4, 2, 5, 2, 6, 5, 7, 3, 3, 7, 8,
-                               7, 5, 6, 2, 4, 8, 1, 3, 4, 5, 1, 2},
-        plane_inds{11, 10, 9, 12, 10, 11};
-
-    s.hittables.push_back(new Mesh(s.vertices, cube_inds, 1));
-    s.hittables.push_back(new Mesh(s.vertices, plane_inds, 2));
-
-    return s;
 }
 
 color ray_color(const Scene &scene, const ray &r, const int depth) {
@@ -161,8 +96,7 @@ struct thread_info {
     vector<color> pixels;
 };
 
-void thread_job(thread_info &info, const Scene &scene,
-                const scene_st &old_scene) {
+void thread_job(thread_info &info, const Scene &scene) {
     fprintf(stdout, "Calculating pixels [%d,%d]...\n", info.start_pixel,
             info.start_pixel + info.n_pixel);
     int nx = scene.camera.nx;
@@ -179,7 +113,7 @@ void thread_job(thread_info &info, const Scene &scene,
             info.start_pixel + info.n_pixel);
 }
 
-void raytracing_threaded(Scene &scene, scene_st &old_scene, ostream &out) {
+void raytracing_threaded(Scene &scene, ostream &out) {
     const int nThreads = thread::hardware_concurrency();
 
     thread_info info[nThreads];
@@ -196,7 +130,7 @@ void raytracing_threaded(Scene &scene, scene_st &old_scene, ostream &out) {
     auto start = chrono::high_resolution_clock::now();
     thread th[nThreads];
     for (int i = 0; i < nThreads; ++i) {
-        th[i] = thread(thread_job, ref(info[i]), cref(scene), cref(old_scene));
+        th[i] = thread(thread_job, ref(info[i]), cref(scene));
     }
     for (int i = 0; i < nThreads; ++i) {
         th[i].join();
@@ -220,8 +154,8 @@ int main(int argc, const char *argv[]) {
         cerr << "Usage: ./rtrace <path_to_scene> <output_path>(optional)"
              << endl;
     }
-    scene_st scene;
-    if (!scene_from_file(scene, argv[1])) {
+    Scene scene;
+    if (!scene_from_xml_file(scene, argv[1])) {
         cerr << "PARSING ERROR, TERMINATING." << endl;
         return -1;
     }
@@ -234,7 +168,6 @@ int main(int argc, const char *argv[]) {
     if (!out.is_open())
         cerr << "Error: Output file" << path << "cannot be opened." << endl;
 
-    Scene s = dummy_scene();
-    raytracing_threaded(s, scene, out);
+    raytracing_threaded(scene, out);
     return 0;
 }
