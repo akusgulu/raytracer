@@ -15,16 +15,20 @@ static inline double determinant(const vec3 &col1, const vec3 &col2,
 bool Mesh::hit(const ray &r, const double &t_min, const double &t_max,
                HitRecord &rec) const {
     rec.t = INF;
-    double t;
+    double t = -1;
     bool ret = false;
 
-    for (int i = 0; i < m_indices.size() - 3; i += 3) {
-        if (intersect(m_vertices[i], m_vertices[i + 1], m_vertices[i + 2], r,
-                      t_min, t_max, t) &&
+    for (int j = 0; j < m_indices.size() - 2; j += 3) {
+        int i0 = m_indices[j] - 1;
+        int i1 = m_indices[j + 1] - 1;
+        int i2 = m_indices[j + 2] - 1;
+        if (intersect(m_vertices[i0], m_vertices[i1], m_vertices[i2], r, t_min,
+                      t_max, t) &&
             rec.t > t) {
             rec.t = t;
-            rec.normal = cross(m_vertices[i + 1] - m_vertices[i],
-                               m_vertices[i + 2] - m_vertices[i]);
+            rec.normal = cross(m_vertices[i1] - m_vertices[i0],
+                               m_vertices[i2] - m_vertices[i0]);
+            rec.mat_id = mat_id;
             ret = true;
         }
     }
