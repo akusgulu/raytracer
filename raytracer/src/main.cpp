@@ -79,13 +79,14 @@ Scene dummy_scene() {
         {-0.023368, -0.100000, -0.160359}, {-0.141361, -0.100000, -0.321845},
         {-1.000000, -0.103624, -1.455763}, {1.000000, -0.123624, -1.455763},
         {-1.000000, -0.123624, 0.544237},  {1.000000, -0.123624, 0.544237}};
+    s.vertices = verts;
     std::vector<int> cube_inds{5, 3, 1, 3, 8, 4, 7, 6, 8, 2, 8, 6,
                                1, 4, 2, 5, 2, 6, 5, 7, 3, 3, 7, 8,
                                7, 5, 6, 2, 4, 8, 1, 3, 4, 5, 1, 2},
         plane_inds{11, 10, 9, 12, 10, 11};
 
-    s.hittables.push_back(new Mesh(verts, cube_inds, 1));
-    s.hittables.push_back(new Mesh(verts, plane_inds, 2));
+    s.hittables.push_back(new Mesh(s.vertices, cube_inds, 1));
+    s.hittables.push_back(new Mesh(s.vertices, plane_inds, 2));
 
     return s;
 }

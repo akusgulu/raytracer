@@ -22,6 +22,7 @@ struct Scene {
     std::vector<Pointlight> lights;
     std::vector<Material> materials;
     std::vector<Hittable *> hittables;
+    std::vector<point3> vertices;
 
     Material get_material(int id) const {
         for (auto &mat : materials) {
