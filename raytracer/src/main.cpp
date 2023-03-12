@@ -7,23 +7,13 @@
 #include <limits>
 #include <string>
 #include <thread>
-
+#include "image.h"
 using namespace std;
 
 #define EPS 0.0000001
 #define INF numeric_limits<double>::infinity()
 double max(const double a, const double b) {
     return a > b ? a : b;
-}
-
-int clamp(double a) {
-    int x = static_cast<int>(a);
-    return max(0, x > 255 ? 255 : x);
-}
-
-void write_color(std::ostream &out, color pixel_color) {
-    out << clamp(pixel_color.x) << ' ' << clamp(pixel_color.y) << ' '
-        << clamp(pixel_color.z) << '\n';
 }
 
 color ray_color(const Scene &scene, const ray &r, const int depth) {
@@ -113,7 +103,7 @@ void thread_job(thread_info &info, const Scene &scene) {
             info.start_pixel + info.n_pixel);
 }
 
-void raytracing_threaded(Scene &scene, ostream &out) {
+void raytracing_threaded(Scene &scene, Image &img) {
     const int nThreads = thread::hardware_concurrency();
 
     thread_info info[nThreads];
@@ -140,10 +130,16 @@ void raytracing_threaded(Scene &scene, ostream &out) {
     cout << "Rendering is completed in " << duration.count() / 1000.0
          << " seconds.\n";
 
-    out << "P3\n" << scene.camera.nx << " " << scene.camera.ny << "\n255\n";
-    for (int i = 0; i < nThreads; ++i) {
-        for (color &c : info[i].pixels) {
-            write_color(out, c);
+    int i = 0;
+    int j = 0;
+    for (auto &th : info) {
+        for (color &c : th.pixels) {
+            img.set_pixel(i, j, c);
+            ++i;
+            if (i == scene.camera.nx) {
+                ++j;
+                i = 0;
+            }
         }
     }
 }
@@ -168,6 +164,9 @@ int main(int argc, const char *argv[]) {
     if (!out.is_open())
         cerr << "Error: Output file" << path << "cannot be opened." << endl;
 
-    raytracing_threaded(scene, out);
+    Image img(scene.camera.nx, scene.camera.ny);
+
+    raytracing_threaded(scene, img);
+    img.export_ppm(out);
     return 0;
 }
