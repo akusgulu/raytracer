@@ -2,11 +2,12 @@
 
 #include "ray.h"
 #include "vec3.h"
+#include <string>
 
 struct HitRecord {
     double t;
     vec3 normal;
-    int mat_id;
+    std::string mat_id;
 };
 
 class Hittable {

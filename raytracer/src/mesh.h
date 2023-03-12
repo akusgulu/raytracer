@@ -3,11 +3,12 @@
 #include <vector>
 #include "hittable.h"
 #include "vec3.h"
+#include <string>
 
 class Mesh : public Hittable {
   public:
     Mesh(const std::vector<point3> &vertices, const std::vector<int> &indices,
-         const int material_id)
+         const std::string &material_id)
         : mat_id{material_id}
         , m_vertices{vertices} {
 
@@ -19,5 +20,5 @@ class Mesh : public Hittable {
   private:
     const std::vector<point3> &m_vertices;
     std::vector<int> m_indices;
-    int mat_id;
+    std::string mat_id;
 };
