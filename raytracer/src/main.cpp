@@ -16,17 +16,10 @@ double max(const double a, const double b) {
     return a > b ? a : b;
 }
 color ray_color(const Scene &scene, const ray &r, const int depth) {
-    HitRecord rec;
     HitRecord closest_hit;
-    closest_hit.t = INF;
-    for (auto &o : scene.hittables) {
-        if (o->hit(r, 0, INF, rec) && closest_hit.t > rec.t) {
-            closest_hit = rec;
-        }
-    }
 
-    color c = scene.background;
-    if (closest_hit.t != INF) {
+    if (scene.hit(r, 0, INF, closest_hit)) {
+        color c = scene.background;
         vec3 n = unit_vec(closest_hit.normal);
         point3 x = r.at(closest_hit.t);
         Material mat = scene.get_material(closest_hit.mat_id);
@@ -50,9 +43,6 @@ color ray_color(const Scene &scene, const ray &r, const int depth) {
                         break;
                     }
                 }
-
-                if (shadow)
-                    break;
             }
 
             if (!shadow) {
@@ -75,9 +65,10 @@ color ray_color(const Scene &scene, const ray &r, const int depth) {
             c += mat.mirror_refl *
                  ray_color(scene, ray(x + w_r * EPS, w_r), depth - 1);
         }
+        return c;
     }
 
-    return c;
+    return scene.background;
 }
 
 struct thread_info {

@@ -25,14 +25,8 @@ struct Scene {
     std::vector<Hittable *> hittables;
     std::vector<point3> vertices;
 
-    Material get_material(std::string id) const {
-        for (auto &mat : materials) {
-            if (mat.id == id) {
-                return mat;
-            }
-        }
-        return Material();
-    }
+    Material get_material(std::string id) const;
+    bool hit(const ray &r, const double t_min, const double t_max,
+             HitRecord &rec) const;
 };
-
 bool scene_from_xml_file(Scene &scene, const char *path);
