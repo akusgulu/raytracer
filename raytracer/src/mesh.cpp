@@ -1,6 +1,7 @@
 #include "mesh.h"
 #include "vec3.h"
 #include <limits>
+#include "aabb.h"
 
 static const double EPSILON = 0.000001;
 static const double INF = std::numeric_limits<double>::infinity();
@@ -14,6 +15,10 @@ static inline double determinant(const vec3 &col1, const vec3 &col2,
 
 bool Mesh::hit(const ray &r, const double &t_min, const double &t_max,
                HitRecord &rec) const {
+
+    if (!m_boundingBox.hit(r, t_min, t_max))
+        return false;
+
     rec.t = INF;
     double t = -1;
     bool ret = false;
@@ -33,6 +38,36 @@ bool Mesh::hit(const ray &r, const double &t_min, const double &t_max,
         }
     }
     return ret;
+}
+
+bool Mesh::initBoundingBox() {
+    if (m_indices.size() <= 0)
+        return false;
+
+    point3 min = m_vertices[0];
+    point3 max = m_vertices[0];
+
+    for (int ind : m_indices) {
+        auto &vert = m_vertices[ind];
+        if (min.x > vert.x)
+            min.x = vert.x;
+        if (min.y > vert.y)
+            min.y = vert.y;
+        if (min.z > vert.z)
+            min.z = vert.z;
+
+        if (max.x < vert.x)
+            max.x = vert.x;
+        if (max.y < vert.y)
+            max.y = vert.y;
+        if (max.z < vert.z)
+            max.z = vert.z;
+    }
+
+    m_boundingBox.m_minPoint = min;
+    m_boundingBox.m_maxPoint = max;
+
+    return true;
 }
 
 static bool intersect(const point3 &v0, const point3 &v1, const point3 &v2,
