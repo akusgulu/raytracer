@@ -38,9 +38,9 @@ void Image::export_ppm(std::ostream &out) const {
     out << "P3\n" << m_width << " " << m_height << "\n255\n";
     for (int j = 0; j < m_height; ++j) {
         for (int i = 0; i < m_width; ++i) {
-            out << clamp(255.999 * data[j * m_width + i].x) << ' '
-                << clamp(255.999 * data[j * m_width + i].y) << ' '
-                << clamp(255.999 * data[j * m_width + i].z) << '\n';
+            out << clamp(data[j * m_width + i].x) << ' '
+                << clamp(data[j * m_width + i].y) << ' '
+                << clamp(data[j * m_width + i].z) << '\n';
         }
     }
 }
