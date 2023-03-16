@@ -14,4 +14,6 @@ class Hittable {
   public:
     virtual bool hit(const ray &r, const double &t_min, const double &t_max,
                      HitRecord &rec) const = 0;
+
+    virtual bool initBoundingBox() = 0;
 };
